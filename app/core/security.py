@@ -1,11 +1,19 @@
+import hashlib
 from datetime import datetime, timedelta
 from typing import Any, Union
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 from .config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
+
+
+def _bcrypt_safe_secret(secret: str) -> str:
+    secret_bytes = secret.encode("utf-8")
+    if len(secret_bytes) <= 72:
+        return secret
+    digest = hashlib.sha256(secret_bytes).hexdigest()
+    return f"sha256${digest}"
 
 def create_access_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
     if expires_delta:
@@ -18,7 +26,20 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
     return encoded_jwt
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    candidates = [plain_password]
+    normalized = _bcrypt_safe_secret(plain_password)
+    if normalized != plain_password:
+        candidates.append(normalized)
+
+    hashed_bytes = hashed_password.encode("utf-8")
+    for candidate in candidates:
+        try:
+            if bcrypt.checkpw(candidate.encode("utf-8"), hashed_bytes):
+                return True
+        except ValueError:
+            continue
+    return False
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    secret = _bcrypt_safe_secret(password).encode("utf-8")
+    return bcrypt.hashpw(secret, bcrypt.gensalt()).decode("utf-8")
