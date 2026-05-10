@@ -46,7 +46,7 @@ class AIService:
 
     async def chat_with_psychologist(self, history: List[Dict[str, str]]) -> str:
         if self.model is None:
-            return "Le module IA n'est pas disponible pour le moment. Verifiez l'installation de google-generativeai et la cle Google API."
+            return "Je suis là avec toi. Pour le moment, je ne peux pas répondre automatiquement, mais tu peux me dire ce qui s’est passé, si tu es en danger maintenant, et le type d’aide dont tu as besoin."
 
         try:
             # Formatage de l'historique pour Gemini
@@ -75,14 +75,13 @@ class AIService:
         except Exception as e:
             # Log de l'erreur pour debug
             print(f"DEBUG GEMINI ERROR: {str(e)}")
-            # Fallback plus humain même en cas d'erreur
-            return "Ma sœur, je t'écoute très attentivement, mais j'ai eu un petit moment d'absence technique. Peux-tu me redire ce que tu as sur le cœur ? Je ne veux rien rater de ce que tu me dis."
+            return "Ma sœur, je suis encore là avec toi. Continue de m’expliquer calmement ce qui se passe, si tu te sens en danger maintenant, et si tu veux une aide médicale, juridique ou psychologique."
 
     async def analyze_threat(self, text: str) -> dict:
         if self.model is None:
             return {
                 "risk_level": "inconnu",
-                "empathetic_response": "Le module IA n'est pas disponible pour le moment."
+                "empathetic_response": "Je suis là avec vous. Décrivez la situation et dites si le danger est immédiat."
             }
 
         try:

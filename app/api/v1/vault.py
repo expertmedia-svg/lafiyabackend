@@ -23,7 +23,10 @@ async def upload_secure_file(file: UploadFile = File(...)):
         with open(file_location, "wb+") as file_object:
             shutil.copyfileobj(file.file, file_object)
             
-        return {"info": f"Fichier '{safe_name}' sauvegardé dans le coffre-fort avec succès."}
+        return {
+            "info": f"Fichier '{safe_name}' sauvegardé dans le coffre-fort avec succès.",
+            "stored_name": safe_name,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
