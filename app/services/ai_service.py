@@ -1,13 +1,23 @@
-import google.generativeai as genai
 from app.core.config import settings
 import json
 import asyncio
 from typing import List, Dict
 
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
 class AIService:
     def __init__(self):
-        genai.configure(api_key=settings.GOOGLE_API_KEY)
         self.model_name = "gemini-2.5-flash"
+        self.model = None
+
+        if genai is None:
+            print("DEBUG GEMINI ERROR: google-generativeai package is not installed.")
+            return
+
+        genai.configure(api_key=settings.GOOGLE_API_KEY)
         self.model = genai.GenerativeModel(
             model_name=self.model_name,
             system_instruction="""
@@ -35,6 +45,9 @@ class AIService:
         )
 
     async def chat_with_psychologist(self, history: List[Dict[str, str]]) -> str:
+        if self.model is None:
+            return "Le module IA n'est pas disponible pour le moment. Verifiez l'installation de google-generativeai et la cle Google API."
+
         try:
             # Formatage de l'historique pour Gemini
             gemini_history = []
@@ -66,6 +79,12 @@ class AIService:
             return "Ma sœur, je t'écoute très attentivement, mais j'ai eu un petit moment d'absence technique. Peux-tu me redire ce que tu as sur le cœur ? Je ne veux rien rater de ce que tu me dis."
 
     async def analyze_threat(self, text: str) -> dict:
+        if self.model is None:
+            return {
+                "risk_level": "inconnu",
+                "empathetic_response": "Le module IA n'est pas disponible pour le moment."
+            }
+
         try:
             response = await asyncio.to_thread(self.model.generate_content, text)
             content = response.text.replace("```json", "").replace("```", "").strip()
