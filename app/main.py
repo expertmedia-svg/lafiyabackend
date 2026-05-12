@@ -93,7 +93,7 @@ PRIVACY_POLICY_HTML = """
 
         <section>
             <h2>8. Contact</h2>
-            <p>Pour toute question relative a cette politique, vous pouvez contacter l'equipe Lafiya a l'adresse suivante : <a href="mailto:contact@lafiya.app">contact@lafiya.app</a>.</p>
+            <p>Pour toute question relative a cette politique, vous pouvez contacter l'equipe Lafiya a l'adresse suivante : <a href="mailto:expertmedia@comstratmedia.com">expertmedia@comstratmedia.com</a>.</p>
         </section>
     </main>
 </body>
