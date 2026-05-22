@@ -6,6 +6,8 @@ from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
 from app.core.security import get_password_hash, verify_password, create_access_token
 from datetime import timedelta
 from app.core.config import settings
+from app.api.v1.cycle import get_current_user
+from app.models.cycle_journal_entry import CycleJournalEntry
 
 router = APIRouter()
 
@@ -44,3 +46,16 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)):
         subject=user.id, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.delete("/delete-account", status_code=status.HTTP_200_OK)
+def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # Supprimer toutes les entrées associées à l'utilisateur
+    db.query(CycleJournalEntry).filter(CycleJournalEntry.user_id == current_user.id).delete()
+    
+    # Supprimer l'utilisateur
+    db.delete(current_user)
+    db.commit()
+    return {"message": "Account and all associated data deleted successfully."}

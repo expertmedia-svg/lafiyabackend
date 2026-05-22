@@ -44,7 +44,7 @@ PRIVACY_POLICY_HTML = """
 <body>
     <main>
         <h1>Politique de confidentialite de Lafiya</h1>
-        <p>Derniere mise a jour : 12 mai 2026</p>
+        <p>Derniere mise a jour : 22 mai 2026</p>
 
         <section>
             <h2>1. Objet</h2>
@@ -77,8 +77,9 @@ PRIVACY_POLICY_HTML = """
         </section>
 
         <section>
-            <h2>5. Stockage et securite</h2>
-            <p>Une partie des donnees peut etre stockee localement sur l'appareil via des mecanismes de stockage securise. Lorsque des donnees sont envoyees au serveur Lafiya, elles transitent via HTTPS. Aucune methode de transmission ou de stockage n'offre une securite absolue, mais des mesures raisonnables sont prises pour proteger les donnees.</p>
+            <h2>5. Stockage, conservation et securite</h2>
+            <p>Une partie des donnees peut etre stockee localement sur l'appareil via des mecanismes de stockage securise. Lorsque des donnees sont envoyees au serveur Lafiya, elles transitent via HTTPS.</p>
+            <p><strong>Duree de conservation :</strong> Les donnees personnelles traitees par Lafiya sont conservees activement tant que votre compte reste actif. Si votre compte demeure inactif pendant une periode continue de 24 mois, toutes vos donnees personnelles seront definitivement et automatiquement supprimees de nos serveurs. Les donnees stockees localement sur votre appareil restent sous votre controle exclusif et peuvent etre effacees en desinstallant l'application ou via ses options.</p>
         </section>
 
         <section>
@@ -87,8 +88,11 @@ PRIVACY_POLICY_HTML = """
         </section>
 
         <section>
-            <h2>7. Choix de l'utilisatrice</h2>
-            <p>L'utilisatrice peut limiter certaines permissions depuis les reglages de son appareil et choisir de ne pas utiliser certaines fonctions necessitant un envoi de donnees ou de fichiers.</p>
+            <h2>7. Choix de l'utilisatrice et suppression des donnees</h2>
+            <p>L'utilisatrice dispose d'un controle total sur ses donnees personnelles :</p>
+            <p><strong>- Limitation des permissions :</strong> L'utilisatrice peut limiter ou retirer a tout moment certaines permissions (camera, galerie, notifications) depuis les reglages de son appareil.</p>
+            <p><strong>- Suppression autonome depuis l'application :</strong> L'utilisatrice peut a tout moment supprimer l'integralite de ses donnees et son compte directement depuis l'application en se rendant dans l'onglet "Plus" > Option "Supprimer mon compte et mes donnees". Cette action entraine la suppression immediate, complete et irreversible de toutes les donnees stockees localement et sur le serveur backend.</p>
+            <p><strong>- Demande de suppression par e-mail :</strong> L'utilisatrice peut egalement demander la suppression definitive de son compte et de toutes ses donnees en envoyant une simple demande par e-mail a l'adresse de contact : <a href="mailto:expertmedia@comstratmedia.com">expertmedia@comstratmedia.com</a>. Les donnees associees seront supprimees de nos systemes sous un delai maximum de 30 jours.</p>
         </section>
 
         <section>
