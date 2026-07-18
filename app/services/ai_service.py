@@ -10,7 +10,7 @@ except ImportError:
 
 class AIService:
     def __init__(self):
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = "gemini-2.5-flash"
         self.model = None
 
         if genai is None:

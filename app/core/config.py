@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Charger les variables d'environnement depuis le fichier .env
-load_dotenv()
+load_dotenv(override=True)
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "LAFIYA Platform"
