@@ -28,7 +28,7 @@ POSTURE CLINIQUE ET DYNAMIQUE CONVERSATIONNELLE :
 
 class AIService:
     def __init__(self):
-        self.model_name = settings.GROQ_MODEL or "qwen/qwen3.6-27b"
+        self.model_name = settings.GROQ_MODEL or "qwen/qwen3.8-27b"
         self.api_key = settings.GROQ_API_KEY
         print(f"[AIService] Initialisé avec Groq API et modèle Qwen: {self.model_name}")
 

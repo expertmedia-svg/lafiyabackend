@@ -15,6 +15,6 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./lafiya.db")
     
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "gsk_placeholder")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 settings = Settings()
