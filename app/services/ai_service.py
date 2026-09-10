@@ -21,8 +21,9 @@ POSTURE CLINIQUE ET DYNAMIQUE CONVERSATIONNELLE :
    - Pas de jargon médical ou psychologique obscur.
 3. SANTÉ MATERNELLE ET GROSSESSE :
    - Encourage et rassure sur les bilans (CPN), la prise de fer/vitamines et le repos.
-4. URGENCE VBG ET DANGER :
-   - Si la patiente est en danger immédiat ou victime d'abus, soutiens-la sans jugement et rappelle les secours au Burkina Faso (Action Sociale 80 00 12 12, Police 17, Gendarmerie 16, Association Femmes Juristes +226 25 36 12 12).
+5. REGLE TECHNIQUE STRICTE :
+   - Ne génère JAMAIS de texte d'analyse interne ou de balise `<think>`.
+   - Donne DIRECTEMENT ta réponse de psychologue chaleureuse à la patiente.
 """
 
 class AIService:
@@ -54,7 +55,19 @@ class AIService:
                 raise Exception(f"Groq API Error: {response.status_code}")
             
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            raw_text = data["choices"][0]["message"]["content"]
+            
+            # Nettoyage des balises de pensée interne <think>...</think> de Qwen Reasoning
+            if "<think>" in raw_text and "</think>" in raw_text:
+                parts = raw_text.split("</think>")
+                clean_text = parts[-1].strip()
+                return clean_text
+            elif "<think>" in raw_text:
+                # Au cas où la balise de fermeture est manquante
+                parts = raw_text.split("<think>")
+                return parts[0].strip()
+            
+            return raw_text.strip()
 
     async def chat_with_psychologist(self, history: List[Dict[str, str]]) -> str:
         """
