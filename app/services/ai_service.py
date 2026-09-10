@@ -45,7 +45,7 @@ class AIService:
             "model": self.model_name,
             "messages": messages,
             "temperature": temperature,
-            "max_tokens": 1024,
+            "max_tokens": 350,
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:
