@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./lafiya.db")
     
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "sk-dummy-key-for-testing")
-    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "AIzaSyCH5_EAKT38eejmnITBc1EAaZvTZQDZXns")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "gsk_dummy_key_for_lafiya")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen-2.5-32b")
 
 settings = Settings()

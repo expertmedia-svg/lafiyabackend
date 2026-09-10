@@ -1,119 +1,127 @@
-from app.core.config import settings
 import json
 import asyncio
-from typing import List, Dict
+from typing import List, Dict, Any
+import httpx
+from app.core.config import settings
 
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
+GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
+
+SYSTEM_PROMPT_DOCTEUR_LAFIYA = """
+Tu es "Docteur Lafiya", un psychologue et conseiller santé burkinabè spécialisé dans le soutien aux femmes du monde rural, la santé maternelle (grossesse, consultations prénatales, examens, médicaments), et l'accompagnement des victimes de violences basées sur le genre (VBG).
+Tu t'adresses principalement à des femmes qui ont besoin d'explications simples, chaleureuses, rassurantes et très concrètes.
+
+REGLES ABSOLUES :
+1. PARLE EN FRANÇAIS TRÈS SIMPLE, CHALEUREUX ET ACCESSIBLE. Pas de jargon médical complexe ni d'expressions abstraites.
+2. Pour les femmes enceintes : donne des conseils clairs sur les rendez-vous CPN (Consultation Prénatale), la prise de Fer/Acide Folique, la bonne hydratation, et les signes d'alerte.
+3. Pour les victimes de violences/détresse : offre une écoute digne, sans aucun jugement, évalue le danger immédiat et oriente vers les réseaux d'experts (Action Sociale 80 00 12 12, Police 17, Gendarmerie 16, Femmes Juristes +226 25 36 12 12).
+4. Tes réponses seront lues à haute voix par la synthèse vocale pour les utilisatrices analphabètes. Fais des phrases courtes, bien rythmées et faciles à écouter.
+
+CONTACTS D'URGENCE VBG AU BURKINA FASO :
+- Action Sociale (Dénonciation VBG) : 80 00 12 12
+- Police Secours : 17
+- Gendarmerie : 16
+- Sapeurs-Pompiers : 18
+- Association des Femmes Juristes : +226 25 36 12 12
+"""
 
 class AIService:
     def __init__(self):
-        self.model_name = "gemini-2.5-flash"
-        self.model = None
+        self.model_name = settings.GROQ_MODEL or "qwen-2.5-32b"
+        self.api_key = settings.GROQ_API_KEY
+        print(f"[AIService] Initialisé avec Groq API et modèle Qwen: {self.model_name}")
 
-        if genai is None:
-            print("DEBUG GEMINI ERROR: google-generativeai package is not installed.")
-            return
+    async def _call_groq_api(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> str:
+        """
+        Appelle directement l'API Groq avec le modèle Qwen.
+        Désactive toute tentative vers OpenAI ou Gemini.
+        """
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": 1024,
+        }
 
-        genai.configure(api_key=settings.GOOGLE_API_KEY)
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            system_instruction="""
-            Tu es "Docteur Lafiya", un psychologue burkinabè spécialiste des violences basées sur le genre, de la sécurité et de l'orientation de crise.
-            Tu réponds en français simple, chaleureux et digne, sans jargon médical inutile, sans jugement et sans culpabiliser la victime.
-
-            OBJECTIF :
-            - aider la victime à se sentir comprise,
-            - évaluer le danger réel,
-            - proposer des solutions adaptées et réalisables,
-            - l'aider à retrouver un peu de contrôle, de sécurité et d'apaisement.
-
-            CADRE DE RÉPONSE :
-            1. Commence toujours par valider l'émotion ou la souffrance en une ou deux phrases.
-            2. Identifie rapidement si le danger est immédiat ou non.
-            3. Si la situation est claire, donne ensuite un plan d'action concret en 2 à 4 étapes maximum.
-            4. Termine par une question utile ou une petite action d'apaisement immédiate.
-
-            SI LA VICTIME EST EN DANGER IMMÉDIAT :
-            - sois direct,
-            - dis clairement qu'il faut chercher un endroit sûr,
-            - recommande d'appeler les secours ou une personne de confiance,
-            - rappelle les contacts d'urgence ci-dessous,
-            - ne te contente pas d'écouter passivement.
-
-            CONTACTS D'URGENCE AU BURKINA FASO :
-            - Action Sociale (Dénonciation VBG) : 80 00 12 12
-            - Police Secours : 17
-            - Gendarmerie : 16
-            - Sapeurs-Pompiers : 18
-            - Association des Femmes Juristes : +226 25 36 12 12
-
-            ORIENTATION PRATIQUE :
-            - aide à repérer les signes de violence, d'emprise, de menace, de harcèlement ou d'urgence,
-            - propose des pistes adaptées : se mettre à l'abri, contacter une personne fiable, consulter un médecin, conserver les preuves, demander une aide juridique, aller vers une ONG ou les services sociaux,
-            - rappelle l'utilisation du Mode Contrainte (Code 0000) si l'agresseur surveille le téléphone,
-            - conseille de ranger photos, audios et documents dans le Coffre-fort de LAFIYA.
-
-            STYLE :
-            - ton humain, protecteur et crédible,
-            - phrases claires et courtes,
-            - pas de réponse froide, mécanique ou générique,
-            - pas de promesse impossible,
-            - pas de jugement moral sur la victime.
-
-            SI LE PROBLÈME EST FLOU :
-            - pose une ou deux questions maximum,
-            - cherche surtout à clarifier : danger immédiat, type de violence, besoin principal, présence d'enfants, blessures, lieu actuel.
-            """
-        )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(GROQ_ENDPOINT, headers=headers, json=payload)
+            if response.status_code != 200:
+                print(f"[GROQ QWEN ERROR] Status {response.status_code}: {response.text}")
+                raise Exception(f"Groq API Error: {response.status_code}")
+            
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
 
     async def chat_with_psychologist(self, history: List[Dict[str, str]]) -> str:
-        if self.model is None:
-            return "Je suis là avec toi. Pour le moment, je ne peux pas répondre automatiquement, mais tu peux me dire ce qui s’est passé, si tu es en danger maintenant, où tu te trouves, et quel soutien tu cherches en priorité."
-
+        """
+        Chat conversationnel pour le soutien psychologique, social et de santé.
+        Propulsé uniquement par Groq (Qwen).
+        """
         try:
-            # Formatage de l'historique pour Gemini
-            gemini_history = []
-            for msg in history[:-1]:
-                role = "user" if msg["role"] == "user" else "model"
-                
-                # Gemini exige que l'historique commence par un message 'user'
-                if not gemini_history and role == "model":
-                    continue
-                    
-                gemini_history.append({
-                    "role": role,
-                    "parts": [msg["content"]]
-                })
+            formatted_messages = [{"role": "system", "content": SYSTEM_PROMPT_DOCTEUR_LAFIYA}]
+            for msg in history:
+                role = "user" if msg["role"] == "user" else "assistant"
+                formatted_messages.append({"role": role, "content": msg["content"]})
 
-            # Initialisation du chat avec l'historique
-            chat = self.model.start_chat(history=gemini_history)
-            
-            # Message actuel
-            last_message = history[-1]["content"]
-            
-            # Envoi asynchrone
-            response = await asyncio.to_thread(chat.send_message, last_message)
-            return response.text
+            return await self._call_groq_api(formatted_messages, temperature=0.7)
         except Exception as e:
-            # Log de l'erreur pour debug
-            print(f"DEBUG GEMINI ERROR: {str(e)}")
-            return "Ma sœur, je suis encore là avec toi. Continue de m’expliquer ce qui se passe, dis-moi si le danger est immédiat, et nous chercherons ensemble la prochaine étape la plus sûre et la plus utile."
+            print(f"[AIService GROQ QWEN ERROR] chat_with_psychologist: {e}")
+            return (
+                "Ma sœur, je suis là avec toi. Je t'écoute et tu es en sécurité ici. "
+                "Dis-moi ce qui se passe ou si tu as besoin d'aide pour ta santé ou pour trouver un endroit sûr. "
+                "En cas de danger immédiat, appelle le 80 00 12 12 ou le 17."
+            )
 
-    async def analyze_threat(self, text: str) -> dict:
-        if self.model is None:
+    async def analyze_threat(self, text: str) -> Dict[str, Any]:
+        """
+        Analyse de dangerosité et évaluation des menaces via Groq (Qwen).
+        """
+        prompt = (
+            f"Analyse ce message de femme en détresse : '{text}'.\n"
+            "Réponds UNIQUEMENT au format JSON valide avec la structure suivante :\n"
+            '{"risk_level": "faible|moyen|eleve|extreme", "empathetic_response": "message court et très chaleureux en français simple"}'
+        )
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT_DOCTEUR_LAFIYA},
+            {"role": "user", "content": prompt}
+        ]
+        try:
+            raw_response = await self._call_groq_api(messages, temperature=0.2)
+            clean_json = raw_response.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean_json)
+        except Exception as e:
+            print(f"[AIService GROQ QWEN ERROR] analyze_threat: {e}")
             return {
-                "risk_level": "inconnu",
-                "empathetic_response": "Je suis là avec vous. Décrivez la situation et dites si le danger est immédiat."
+                "risk_level": "moyen",
+                "empathetic_response": "Ma sœur, je prends ta situation très au sérieux. Prends soin de toi et sache que des professionnels peuvent t'aider au 80 00 12 12."
             }
 
+    async def get_pregnancy_and_health_advice(self, week_number: int, user_query: str = "") -> str:
+        """
+        Conseils personnalisés de santé maternelle, bilans et rappels pour les femmes enceintes en milieu rural.
+        """
+        prompt = (
+            f"Une femme enceinte est à sa {week_number}ème semaine de grossesse en zone rurale. "
+            f"Question ou préoccupation : '{user_query or 'Donne-moi les conseils clés pour cette étape.'}'. "
+            "Rédige 3 conseils très courts, faciles à écouter en audio (TTS), abordant :\n"
+            "1. Le bilan de santé ou RDV médical (CPN, examens).\n"
+            "2. La prise de médicaments importants (Fer/Acide Folique, vitamines).\n"
+            "3. L'hydratation et le repos."
+        )
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT_DOCTEUR_LAFIYA},
+            {"role": "user", "content": prompt}
+        ]
         try:
-            response = await asyncio.to_thread(self.model.generate_content, text)
-            content = response.text.replace("```json", "").replace("```", "").strip()
-            return json.loads(content)
-        except:
-            return {"risk_level": "inconnu", "empathetic_response": "Je suis là."}
+            return await self._call_groq_api(messages, temperature=0.6)
+        except Exception as e:
+            print(f"[AIService GROQ QWEN ERROR] get_pregnancy_and_health_advice: {e}")
+            return (
+                f"À la semaine {week_number}, pensez bien à effectuer votre consultation prénatale au centre de santé le plus proche, "
+                "prenez votre fer et acide folique tous les jours, et buvez beaucoup d'eau propre."
+            )
 
 ai_service = AIService()
